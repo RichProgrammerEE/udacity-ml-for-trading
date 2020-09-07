@@ -26,7 +26,6 @@ def plot_data(df, title="Stock prices"):
     """Plot stock prices with a custom title and meaningful axis labels."""
     hf, ha = plt.subplots(1, 1)
     df.plot(title=title, fontsize=12, ax=ha)
-    print(id(hf), id(ha))
     ha.set_xlabel("Date")
     ha.set_ylabel("Price")
     plt.show(block=False)
@@ -66,8 +65,15 @@ def get_data(symbols, dates):
         df = df.join(dfTemp)
         if symbol == 'SPY':
             df = df.dropna(subset=['SPY'])
+        fill_missing_values(df)
 
     return df
+
+
+def fill_missing_values(df):
+    """Fill missing values in data frame, in place."""
+    df.fillna(method='ffill', axis=0, inplace=True)
+    df.fillna(method='bfill', axis=0, inplace=True)
 
 
 def compute_daily_returns(df):
@@ -96,10 +102,10 @@ def get_final_input():
 def test_run():
     """Function called by Test Run."""
     # Define date range
-    dates = pd.date_range('2010-01-01', '2012-12-31', name='Date')
+    dates = pd.date_range('1981-07-30', '2020-08-31', name='Date')
 
     # Choose stock symbols to read
-    symbols = ['GOOG', 'IBM', 'GLD']
+    symbols = ['SPY', 'FAKE1']
 
     # Get stock data
     df = get_data(symbols, dates)
@@ -108,7 +114,7 @@ def test_run():
 
     ##################### Plot Subset of Stock Data ##################
     # Slice and plot
-    ax, dfOut = plot_selected(df, ['SPY'], '2012-1-1', '2012-12-31')
+    ax, dfOut = plot_selected(df, ['SPY'], '1981-07-30', '2020-08-31')
 
     ##################### Bollinger Bands ############################
     # Add moving average to the plot

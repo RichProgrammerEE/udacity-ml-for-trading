@@ -5,8 +5,6 @@ import numpy as np
 import time
 import threading
 
-plts = []
-
 
 def plot_selected(df, columns, start_index, end_index, title='Selected Data'):
     """Plot the desired columns over index values in the given range."""
@@ -94,7 +92,6 @@ def compute_daily_returns(df):
 
 
 def get_final_input():
-    print("executing!")
     input("\n\nPress the enter key to exit.")
     plt.close(fig='all')
 
@@ -105,11 +102,11 @@ def test_run():
     dates = pd.date_range('1981-07-30', '2020-08-31', name='Date')
 
     # Choose stock symbols to read
-    symbols = ['SPY', 'FAKE1']
+    symbols = ['SPY', 'AAPL', 'GLD']
 
     # Get stock data
     df = get_data(symbols, dates)
-    df = normalize_data(df)
+    # df = normalize_data(df)
     plot_data(df, title="Normalized Stock Prices")
 
     ##################### Plot Subset of Stock Data ##################
@@ -119,7 +116,7 @@ def test_run():
     ##################### Bollinger Bands ############################
     # Add moving average to the plot
     mean = dfOut.rolling(window=20).mean()
-    add_plot_data(ax, mean, label='Moving Average')
+    add_plot_data(ax, mean, label='20-Day Moving Average')
 
     # Add Bollinger Bands to plot
     rollStd = dfOut.rolling(window=20).std()
@@ -129,12 +126,49 @@ def test_run():
     add_plot_data(ax, lowerBand, label='Lower Band')
 
     ##################### Daily Returns ############################
-    plot_data(compute_daily_returns(
-        df.loc['2012-1-1':'2012-12-31', 'SPY']), "Daily Returns")
+    dr = compute_daily_returns(
+        df.loc['2012-1-1':'2012-12-31', ['SPY', 'AAPL']])
+    fig2 = plt.figure()
+    mean = dr['SPY'].mean()
+    print("Mean:\n{}".format(mean))
+    std = dr['SPY'].std()
+    print("STD:\n{}".format(std))
+    print("Kurtosis:\n{}".format(dr['SPY'].kurtosis()))
+    # plot_data(dr, "Daily Returns")
+    dr['AAPL'].hist(bins=20, label='AAPL')
+    axs = dr['SPY'].hist(bins=20, label='SPY')
+    axs.axvline(mean, color='w', linestyle='dashed', linewidth=2)
+    axs.axvline(std, color='r', linestyle='dashed', linewidth=2)
+    axs.axvline(-std, color='r', linestyle='dashed', linewidth=2)
+    plt.legend(loc='upper right')
+    plt.show(block=False)
+    plt.draw()
+    plt.pause(0.01)
 
+    ##################### Cumulative Returns ############################
     plot_data(compute_cumulative_returns(
         df.loc['2012-1-1':'2012-12-31', 'SPY']), "Cumulative Returns")
 
+    ##################### Scatter Plots ############################
+    daily_returns = compute_daily_returns(
+        df.loc['2012-1-1':'2012-12-31', ['SPY', 'AAPL', 'GLD']])
+    daily_returns.plot(kind='scatter', x='SPY', y='AAPL')
+    beta, alpha = np.polyfit(daily_returns['SPY'], daily_returns['AAPL'], 1)
+    plt.plot(daily_returns['SPY'], beta *
+             daily_returns['SPY'] + alpha, '-', color='r')
+    plt.show(block=False)
+    plt.draw()
+    plt.pause(0.01)
+    daily_returns.plot(kind='scatter', x='SPY', y='GLD')
+    beta, alpha = np.polyfit(daily_returns['SPY'], daily_returns['GLD'], 1)
+    plt.plot(daily_returns['GLD'], beta *
+             daily_returns['GLD'] + alpha, '-', color='r')
+    plt.show(block=False)
+    plt.draw()
+    plt.pause(0.01)
+    print(daily_returns.corr(method='pearson'))
+
+    ####################################################################
     # start = time.time()
     # while(1):
     #     now = time.time()

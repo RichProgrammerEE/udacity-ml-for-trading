@@ -168,15 +168,6 @@ def test_run():
     plt.pause(0.01)
     print(daily_returns.corr(method='pearson'))
 
-    ####################################################################
-    # start = time.time()
-    # while(1):
-    #     now = time.time()
-    #     if (now - start) >= 1/60.0:
-    #         print('Updating plot, time({})!'.format(now))
-    #         start = now
-    #         plt.pause(0.001)
-
 
 if __name__ == "__main__":
     test_run()

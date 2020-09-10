@@ -84,6 +84,14 @@ def test_run():
     plt.pause(0.01)
     print(daily_returns.corr(method='pearson'))
 
+    ##################### Sharpe Ratio ############################
+    faang = ['FB', 'AAPL', 'AMZN', 'NFLX', 'GOOG']
+    dates = pd.date_range('1997-01-01', '2020-01-01', name='Date')
+    dfPort = tu.portfolio(faang, dates, [0.2] * 5, 1e6)
+    tu.plot_data(dfPort, title='Portfolio Value')
+    print("Sharpe Ratio: {}\n".format(
+        tu.compute_sharpe_ratio(dfPort, samplingPeriod='daily')))
+
 
 if __name__ == "__main__":
     test_run()

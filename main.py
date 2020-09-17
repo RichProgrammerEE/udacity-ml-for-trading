@@ -85,12 +85,66 @@ def test_run():
     print(daily_returns.corr(method='pearson'))
 
     ##################### Sharpe Ratio ############################
-    faang = ['FB', 'AAPL', 'AMZN', 'NFLX', 'GOOG']
-    dates = pd.date_range('1997-01-01', '2020-01-01', name='Date')
-    dfPort = tu.portfolio(faang, dates, [0.2] * 5, 1e6)
+    faang = ['AAPL', 'XOM', 'GLD', 'GOOG']
+    dates = pd.date_range('2010-01-01', '2010-12-31', name='Date')
+    dfPort = tu.portfolio(faang, dates, [0.2] * 4, 1)
     tu.plot_data(dfPort, title='Portfolio Value')
     print("Sharpe Ratio: {}\n".format(
         tu.compute_sharpe_ratio(dfPort, samplingPeriod='daily')))
+
+    ##################### Line Optimization #######################
+    # Plot the original line
+    truth = np.float32([4, 2])
+    print('Original line: C0 = {}, C1 = {}'.format(truth[0], truth[1]))
+    Xtruth = np.linspace(0, 10, 21)
+    Ytruth = truth[0] * Xtruth + truth[1]
+    plt.figure()
+    plt.plot(Xtruth, Ytruth, 'b--', linewidth=2.0, label='Original Value')
+
+    # Generate noisy data points
+    sigma = 3.0
+    noise = np.random.normal(0, sigma, Ytruth.shape)
+    data = np.asarray([Xtruth, Ytruth + noise]).T
+    plt.plot(data[:, 0], data[:, 1], 'go', label='Data Points')
+
+    # Try to fit a line to this data
+    fit = tu.fit_line(data, tu.error)
+    print('Fitted line: C0 = {}, C1 = {}'.format(fit[0], fit[1]))
+    plt.plot(data[:, 0], fit[0] * data[:, 0] +
+             fit[1], 'r--', linewidth=2.0, label='Fitted Line')
+
+    # Add legend and show plot
+    plt.legend()
+    plt.show(block=False)
+    plt.draw()
+    plt.pause(0.01)
+
+    ##################### Polynomial Optimization #################
+    # Plot the original line
+    poly = np.poly1d([1.5, -10, -5, 60, 50])
+    print('Original Polynomial: {}'.format(poly))
+    Xtruth = np.linspace(-5, 5, 21)
+    Ytruth = np.polyval(poly, Xtruth)
+    plt.figure()
+    plt.plot(Xtruth, Ytruth, 'b--', linewidth=2.0, label='Original Polynomial')
+
+    # Generate noisy data points
+    sigma = 100.0
+    noise = np.random.normal(0, sigma, Ytruth.shape)
+    data = np.asarray([Xtruth, Ytruth + noise]).T
+    plt.plot(data[:, 0], data[:, 1], 'go', label='Data Points')
+
+    # Try to fit a line to this data
+    fit = tu.fit_poly(data, tu.error_poly, degree=len(poly))
+    print('Fitted Polynomial:{}'.format(fit))
+    plt.plot(Xtruth, np.polyval(fit, Xtruth), 'r--',
+             linewidth=2.0, label='Fitted Polynomial')
+
+    # Add legend and show plot
+    plt.legend()
+    plt.show(block=False)
+    plt.draw()
+    plt.pause(0.01)
 
 
 if __name__ == "__main__":

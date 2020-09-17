@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import scipy.optimize as spo
 
 ############################## Data Retrieval and Cleaning ##############################
 
@@ -129,3 +130,87 @@ def compute_sharpe_ratio(df, samplingPeriod):
         sys.exit('Sampling period is incorrect')
 
     return k * dr.mean() / dr.std()
+
+
+def error(line, data):  # Error function
+    """Compute error between given line model and observed data.
+
+    Parameters
+    ----------
+    line: tuple/list/array (C0, C1) where C0 is slope and C1 is Y-intercept
+    data: 2D array where each row is a point (X,Y)
+
+    Returns error as a single real value
+    """
+
+    # Metric: Sum of squared Y-axis differences
+    err = np.sum((data[:, 1] - (line[0] * data[:, 0] + line[1]))**2)
+    return err
+
+
+def fit_line(data, error_func):
+    """Fit a line to a given data set, using a supplied error function
+
+    Parameters
+    ----------
+    data: 2D array where each row id a point(X0, Y)
+    error_func: function that computes the error between a line and observed data
+
+    Returns line that minimizes the error function.
+    """
+
+    # Generate initial guess for line model
+    # slope = 0, intercept = mean(y values)
+    guess = np.float32([0, np.mean(data[:, 1])])
+
+    # Plot initial guess (optional)
+    x_ends = np.float32([data[0, 0], data[-1, 0]])
+    plt.plot(x_ends, guess[0] * x_ends + guess[1],
+             'm--', linewidth=2.0, label='Initial Guess')
+
+    # Call optimizer to minimize error function
+    result = spo.minimize(error_func, guess, args=(
+        data,), method='SLSQP', options={'disp': True})
+    return result.x
+
+
+def error_poly(coef, data):
+    """Compute error between given polynomial and observed data.
+
+    Parameters
+    ----------
+    C: numpy.ploy1d object or equivalent array representing polynomial coefficients
+    data: 2D array where each row is a point (X, Y)
+
+    Returns error as a single real value
+    """
+
+    # Metric: Sum of squared Y-axis differences
+    err = np.sum((data[:, 1] - np.polyval(coef, data[:, 0]))**2)
+    return err
+
+
+def fit_poly(data, error_func, degree=3):
+    """FIt a polynomial to a given data set, using supplied error function
+
+    Parameters
+    ----------
+    data: 2D array where each row is a point (X,Y)
+    error_func: function that computes the error between a polynomial and observed data
+
+    Returns polynomial that minimizes the error function
+    """
+
+    # Generate initial guess for polynomial model (all coeffs = 1)
+    Cguess = np.poly1d(np.ones(degree + 1, dtype=np.float32))
+
+    # Plot initial guess(optional)
+    x = np.linspace(data[0, 0], data[-1, 0], len(data[:, 0]))
+    plt.plot(x, np.polyval(Cguess, x), 'm--',
+             linewidth=2.0, label='Initial guess')
+
+    # Call optimizer to minimize error function
+    result = spo.minimize(error_func, Cguess, args=(
+        data,), method='SLSQP', options={'disp': True})
+    # Convert optimal result into a poly1d object and return
+    return np.poly1d(result.x)

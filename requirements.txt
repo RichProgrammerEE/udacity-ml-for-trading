@@ -2,4 +2,5 @@ wheel
 pylint
 autopep8
 pandas
+scipy
 matplotlib
